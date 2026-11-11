@@ -1,6 +1,10 @@
 {{- if .Values.registration.enabled }}
-# Registers the service with Restate after each sync. Retries until Restate's
-# admin API answers; an already-registered, unchanged deployment is a success.
+# Registers the service with Restate after each sync/upgrade. Retries until
+# Restate's admin API answers. "force": true makes Restate re-discover the
+# service even though its address hasn't changed: without it, re-registering a
+# known address keeps the old handlers, so new or changed handlers never show
+# up. This is an in-place update: invocations already running continue on the
+# new code. For long-running workflows, use immutable versions instead.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -33,7 +37,7 @@ spec:
               echo "Registering $uri with {{ .Values.registration.adminUrl }}"
               code=$(curl -sS -o /tmp/out -w '%{http_code}' --retry 30 --retry-all-errors --retry-delay 5 \
                 -H 'content-type: application/json' \
-                -d "{\"uri\": \"$uri\"}" {{ .Values.registration.adminUrl }}/deployments)
+                -d "{\"uri\": \"$uri\", \"force\": true}" {{ .Values.registration.adminUrl }}/deployments)
               cat /tmp/out; echo
               case "$code" in 2*|409) echo "OK ($code)";; *) echo "Failed ($code)"; exit 1;; esac
 {{- end }}

@@ -2,7 +2,7 @@
 {{- $fullname := include "restate.fullname" . }}
 # Provisions the Restate cluster exactly once. Runs on every Argo CD sync as a
 # Sync hook, alongside the StatefulSet (not PostSync: the pods only become
-# Ready after provisioning). Re-runs are no-ops ("provisioned by somebody else").
+# Ready after provisioning), or after every helm install/upgrade without Argo CD. Re-runs are no-ops ("provisioned by somebody else").
 # restatectl provision exits 0 even on errors, so success is judged from its
 # output and confirmed with `restatectl partitions list`.
 apiVersion: batch/v1
@@ -12,8 +12,15 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ $fullname }}-provision
   annotations:
+    # Argo CD: run alongside the StatefulSet on every sync.
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    # Plain Helm (no Argo CD): run after install and every upgrade, replacing the
+    # previous Job (Jobs are immutable). Argo CD ignores these when its own hook
+    # annotation is present. Don't use `helm install --wait`: the pods only turn
+    # Ready after this Job has run.
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation
 spec:
   backoffLimit: 3
   activeDeadlineSeconds: 900

@@ -26,7 +26,7 @@ extraEnv:
   - name: AWS_REGION                                   # see 3. above
     value: us-east-2
   - name: RESTATE_WORKER__SNAPSHOTS__DESTINATION       # see 2. above
-    value: s3://restate-argocd-eks-snapshots-171d0c/restate/snapshots   # a bucket/prefix only this cluster uses
+    value: s3://restate-argocd-eks-snapshots-171d0c/restate/snapshots   # a bucket/prefix only this cluster uses; empty it before reinstalling
 
 # If your pod policy requires specific user/group IDs, override the chart
 # defaults (UID 1000, GID 3000, fsGroup 2000) here:

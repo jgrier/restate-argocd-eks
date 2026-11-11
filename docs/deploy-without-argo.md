@@ -111,7 +111,10 @@ kubectl -n <namespace> delete job restate-provision greeter-register     # Helm 
 kubectl -n <namespace> delete pvc storage-restate-0 storage-restate-1 storage-restate-2
 ```
 
-The disks (PVs, `Retain`) stay behind as `Released`. Namespace users can't list or delete PVs, so **ask the platform team** to delete them and their EBS volumes. Restate's data lives on those volumes until then.
+Two things outlive the uninstall:
+
+- **The disks** (PVs, `Retain`) stay behind as `Released`. Namespace users can't list or delete PVs, so **ask the platform team** to delete them and their EBS volumes. Restate's data lives on those volumes until then.
+- **The snapshots in S3.** They belong to the old cluster. **Before installing again with the same snapshot destination, delete them** (`aws s3 rm s3://<bucket>/restate/snapshots/ --recursive`, by someone allowed to delete there), or point `RESTATE_WORKER__SNAPSHOTS__DESTINATION` at a new prefix. Otherwise the new cluster's partitions refuse to start: its logs show `cluster fingerprint mismatch`, snapshots fail with `Can not find a suitable node to take snapshot`, and calls hang. Removing the old snapshots is enough; the partitions retry every 2 seconds and start on their own.
 
 ## Differences from the Argo CD path
 

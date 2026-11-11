@@ -43,5 +43,6 @@ On EKS 1.34, with Istio 1.30.8 (CNI plugin, PERMISSIVE mTLS), restricted Pod Sec
 | Pod `Init:Error`, `istio-validation` log says istio-cni isn't running on the node | New node; CNI agent not ready yet | Usually self-heals (repairPods, Job retries); otherwise delete the pod |
 | Job pod stuck `1/2` after finishing | Istio without native sidecars | `sidecar.istio.io/inject: "false"` on the Job's pod template |
 | Pods Running but never Ready | Cluster not provisioned | Check `restate-provision` logs |
+| Pods Ready, but calls hang; `create-snapshot` says `Can not find a suitable node`; logs say `cluster fingerprint mismatch` | The snapshot destination holds snapshots from an **earlier** Restate cluster (e.g. after uninstall and reinstall) | Delete the old snapshots under that prefix, or use a new prefix; partitions start on their own within seconds |
 | Snapshots fail (`AccessDenied`, STS timeouts) | Wrong ServiceAccount, IAM trust, or Istio egress `REGISTRY_ONLY` | Check the SA annotation/association; add ServiceEntries for STS/S3 |
 | Registration fails / `bad gateway` | Service not on 9080, Service/port mismatch, mTLS mode mismatch | Check the Job log; curl `http://<svc>:9080` from a pod in the namespace |

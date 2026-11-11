@@ -120,10 +120,11 @@ Read-only deploy key for the repo (if private):
 mkdir -p platform/secrets
 ssh-keygen -t ed25519 -N "" -C argocd -f platform/secrets/argocd-deploy-key
 gh repo deploy-key add platform/secrets/argocd-deploy-key.pub --repo <owner>/<repo> --title argocd
-kubectl -n argocd create secret generic repo-restate-argocd-eks \
+REPO_SECRET="repo-$(basename "$REPO" .git)"        # one secret per repo
+kubectl -n argocd create secret generic "$REPO_SECRET" \
   --from-literal=type=git --from-literal=url="$REPO" \
   --from-file=sshPrivateKey=platform/secrets/argocd-deploy-key
-kubectl -n argocd label secret repo-restate-argocd-eks argocd.argoproj.io/secret-type=repository
+kubectl -n argocd label secret "$REPO_SECRET" argocd.argoproj.io/secret-type=repository
 ```
 
 Project and Applications:

@@ -1,8 +1,16 @@
 # Restate: everything environment-specific. Edit this file only;
 # leave values-cluster.yaml as is.
 
-# An existing ServiceAccount that your platform team linked to an IAM role
-# allowed to read/write the snapshot bucket (IRSA or EKS Pod Identity).
+# Snapshot storage needs three settings that go together:
+#   1. serviceAccount.name: who Restate is in AWS. An existing ServiceAccount
+#      your platform team linked to an IAM role (IRSA or EKS Pod Identity).
+#   2. RESTATE_WORKER__SNAPSHOTS__DESTINATION (below): where snapshots go.
+#      It must be within what that role allows: s3:ListBucket on the bucket,
+#      and Get/Put/DeleteObject + AbortMultipartUpload on the prefix.
+#   3. AWS_REGION (below): the bucket's region.
+# Check: restatectl snapshots create-snapshot. AccessDenied points at the
+# role's policy or prefix; STS/web-identity errors at the ServiceAccount link;
+# timeouts at network egress to STS/S3.
 serviceAccount:
   create: false
   name: restate-workload
@@ -15,9 +23,9 @@ image:
   repository: docker.restate.dev/restatedev/restate   # or your registry mirror
 
 extraEnv:
-  - name: AWS_REGION
+  - name: AWS_REGION                                   # see 3. above
     value: us-east-2
-  - name: RESTATE_WORKER__SNAPSHOTS__DESTINATION
+  - name: RESTATE_WORKER__SNAPSHOTS__DESTINATION       # see 2. above
     value: s3://restate-argocd-eks-snapshots-171d0c/restate/snapshots   # a bucket/prefix only this cluster uses
 
 # If your pod policy requires specific user/group IDs, override the chart

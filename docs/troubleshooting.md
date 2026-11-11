@@ -22,6 +22,9 @@ On EKS 1.34, with Istio 1.30.8 (CNI plugin, PERMISSIVE mTLS), restricted Pod Sec
 | Argo Applications | Live in `argocd`; app teams usually can't create them directly (see platform-setup step 8). |
 | Kubernetes RBAC vs Argo | Argo applies with its own identity, so the AppProject, not the user's RBAC, limits what an Application can create. |
 | Istio CNI on brand-new nodes | A pod scheduled on a node that joined seconds ago can fail `istio-validation` (`Init:Error`) because `istio-cni-node` isn't running there yet. Seen when scaling nodes up: the provision Job's first pod failed and the Job's retry (`backoffLimit`) succeeded. Long-running pods recover on their own (the CNI chart's default `repair.repairPods: true` fixes their networking as they restart); Job pods with `restartPolicy: Never` rely on the Job's retries. |
+| Re-registering a known service address | Restate keeps the old handlers unless the registration says `"force": true`. The Greeter registration Job sends it, so code updates are re-discovered. |
+| `helm install --wait` | Times out: the pods only turn Ready after the provisioning hook, which Helm runs after `--wait`. Don't use `--wait`. |
+| `helm uninstall` | Leaves the hook Jobs and the StatefulSet's PVCs; PVs (`Retain`) need the platform team. |
 | `kubectl logs -l …` | Shows only 10 lines per pod unless you pass `--tail=-1`. |
 | Restate UI playground | Calls the pod IP advertised by the admin API; doesn't work through `port-forward`. Use curl. |
 

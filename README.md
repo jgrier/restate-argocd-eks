@@ -27,7 +27,8 @@ Tested on EKS 1.34, Istio 1.30.8, Argo CD v3.5.6, Restate 1.8.1.
 1. [Platform setup](docs/platform-setup.md): what cluster admins set up once (cluster, storage, Istio, Argo CD, namespace, IAM, project).
 2. [Deploy Restate](docs/deploy-restate.md): the app team deploys the Restate cluster with Argo CD.
 3. [Deploy a Restate service](docs/deploy-app.md): the app team deploys and registers a service with Argo CD.
-4. [Troubleshooting and lessons learned](docs/troubleshooting.md)
+4. [Deploy with Helm and namespace-only rights (no Argo CD)](docs/deploy-without-argo.md): the same charts and the same file to edit, for a user with admin in one namespace and nothing else.
+5. [Troubleshooting and lessons learned](docs/troubleshooting.md)
 
 ## Use this repo
 
@@ -47,5 +48,7 @@ Tested on EKS 1.34, Istio 1.30.8, Argo CD v3.5.6, Restate 1.8.1.
 3. **Platform part** (once per cluster and namespace; skip anything your platform team already provides): follow [docs/platform-setup.md](docs/platform-setup.md) with `platform/env.sh`. Use the same namespace, ServiceAccount, bucket and repo URL you set in step 2.
 4. **Commit and push.** Create the Argo CD project and Applications (`kubectl apply -f argocd/`, done by the platform team in most setups).
 5. **Sync the Restate Application first, then the Greeter one** (Argo CD UI: Refresh → Sync → Synchronize). Verify with [docs/deploy-restate.md](docs/deploy-restate.md) and [docs/deploy-app.md](docs/deploy-app.md).
+
+**No Argo CD?** With admin rights in one namespace, `helm install` the same charts after the same edit: see [docs/deploy-without-argo.md](docs/deploy-without-argo.md).
 
 Nothing in the repo is account-specific. IAM role ARNs live only on the platform-created ServiceAccount.

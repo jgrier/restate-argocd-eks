@@ -106,8 +106,4 @@ Edit values (for example `image.tag`), commit, then Refresh and Sync. Pods roll 
 
 ## Without Argo CD (plain Helm)
 
-```bash
-helm install restate ./restate/chart -n team-a -f restate/values-cluster.yaml -f restate/values-env.yaml
-```
-
-Helm ignores the Argo hook annotation, so the provision Job runs once at install as an ordinary resource.
+See [deploy-without-argo.md](deploy-without-argo.md). In short: `helm install restate ./restate/chart -n <namespace> -f restate/values-cluster.yaml -f restate/values-env.yaml` (no `--wait`). The provision Job runs as a Helm post-install/post-upgrade hook.

@@ -21,6 +21,7 @@ On EKS 1.34, with Istio 1.30.8 (CNI plugin, PERMISSIVE mTLS), restricted Pod Sec
 | Namespace-only users | Can't create, or even **list**, StorageClasses. Get the class name from the platform team. |
 | Argo Applications | Live in `argocd`; app teams usually can't create them directly (see platform-setup step 8). |
 | Kubernetes RBAC vs Argo | Argo applies with its own identity, so the AppProject, not the user's RBAC, limits what an Application can create. |
+| Istio CNI on brand-new nodes | A pod scheduled on a node that joined seconds ago can fail `istio-validation` (`Init:Error`) because `istio-cni-node` isn't running there yet. Seen when scaling nodes up: the provision Job's first pod failed and the Job's retry (`backoffLimit`) succeeded. Long-running pods recover on their own (the CNI chart's default `repair.repairPods: true` fixes their networking as they restart); Job pods with `restartPolicy: Never` rely on the Job's retries. |
 | `kubectl logs -l …` | Shows only 10 lines per pod unless you pass `--tail=-1`. |
 | Restate UI playground | Calls the pod IP advertised by the admin API; doesn't work through `port-forward`. Use curl. |
 
@@ -35,6 +36,7 @@ On EKS 1.34, with Istio 1.30.8 (CNI plugin, PERMISSIVE mTLS), restricted Pod Sec
 | Pods rejected: `violates PodSecurity` / UID not allowed | Policy on user IDs or seccomp | Set allowed UIDs; keep `seccompProfile: RuntimeDefault` |
 | `ImagePullBackOff` | Public registries blocked | Mirror the images (Restate, curl, your service) |
 | Provision Job logs `[ERR] … dns error` / `upstream connect error` | restate-0 not up yet | Normal for ~20 seconds; check pods if it persists |
+| Pod `Init:Error`, `istio-validation` log says istio-cni isn't running on the node | New node; CNI agent not ready yet | Usually self-heals (repairPods, Job retries); otherwise delete the pod |
 | Job pod stuck `1/2` after finishing | Istio without native sidecars | `sidecar.istio.io/inject: "false"` on the Job's pod template |
 | Pods Running but never Ready | Cluster not provisioned | Check `restate-provision` logs |
 | Snapshots fail (`AccessDenied`, STS timeouts) | Wrong ServiceAccount, IAM trust, or Istio egress `REGISTRY_ONLY` | Check the SA annotation/association; add ServiceEntries for STS/S3 |

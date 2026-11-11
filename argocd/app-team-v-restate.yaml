@@ -1,0 +1,21 @@
+# The Restate cluster as its own Argo CD Application.
+# Created by the platform team (Applications live in the argocd namespace). Manual sync.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: team-v-restate
+  namespace: argocd
+spec:
+  project: team-v
+  source:
+    repoURL: git@github.com:jgrier/restate-argocd-eks.git
+    targetRevision: versioning
+    path: restate/chart
+    helm:
+      releaseName: restate
+      valueFiles:
+        - ../values-cluster.yaml   # how Restate runs (don't edit)
+        - ../values-env-team-v.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: team-v

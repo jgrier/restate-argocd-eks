@@ -20,6 +20,7 @@ public class Greeter {
 
   public record Greeting(String name) {}
   public record GreetingResponse(String message) {}
+  public record SlowGreeting(String name, int seconds) {}
 
   @Handler
   public GreetingResponse greet(Greeting req) {
@@ -32,6 +33,12 @@ public class Greeter {
     // Respond to caller
     return new GreetingResponse("You said " + greetingPrefix + " to " + req.name + "!");
   }
+
+  // Long-running handler for testing version draining: the invocation stays
+  // pinned to the deployment it started on while it sleeps durably.
+  @Handler
+  public GreetingResponse slowGreet(SlowGreeting req) {
+    Restate.sleep(Duration.ofSeconds(req.seconds()));
+    return new GreetingResponse("You said " + greetingPrefix + " to " + req.name() + " after " + req.seconds() + "s!");
+  }
 }
-
-

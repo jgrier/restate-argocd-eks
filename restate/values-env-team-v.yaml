@@ -1,0 +1,12 @@
+# Test environment for the versioning branch (namespace team-v).
+# No snapshots, so no IAM: the chart creates its own ServiceAccount.
+serviceAccount:
+  create: true
+storage:
+  storageClassName: gp3
+  size: 10Gi
+image:
+  repository: docker.restate.dev/restatedev/restate
+extraEnv:
+  - name: AWS_REGION
+    value: us-east-2

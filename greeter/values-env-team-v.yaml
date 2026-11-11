@@ -1,0 +1,6 @@
+# Test environment for the versioning branch (namespace team-v).
+image:
+  repository: ghcr.io/jgrier/restate-greeter
+  tag: v2          # bump to roll out a new version
+versioning:
+  enabled: true    # one Deployment + Service per version; release Job reaps drained ones

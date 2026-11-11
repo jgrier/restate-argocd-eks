@@ -1,4 +1,4 @@
-{{- if .Values.registration.enabled }}
+{{- if and .Values.registration.enabled (not .Values.versioning.enabled) }}
 # Registers the service with Restate after each sync. Retries until Restate's
 # admin API answers; an already-registered, unchanged deployment is a success.
 apiVersion: batch/v1

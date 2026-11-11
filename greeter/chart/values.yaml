@@ -16,3 +16,17 @@ registration:
   # Restate admin API, reachable inside the namespace.
   adminUrl: http://restate:9070
   image: curlimages/curl:8.17.0
+
+# Immutable versions (opt-in). Each version gets its own Deployment + Service
+# (<release>-<version>). On every sync, a PostSync "release" Job registers the
+# new version with Restate, then removes old versions that are no longer
+# current and have no unfinished invocations pinned to them.
+versioning:
+  enabled: false
+  # Defaults to image.tag (dots become dashes).
+  version: ""
+  # ServiceAccount the release Job runs as. Provided by the platform team, with
+  # a Role allowing get/list/delete on Deployments and Services in the namespace.
+  serviceAccountName: greeter-release
+  # Needs sh, curl, jq and kubectl.
+  image: alpine/k8s:1.34.1

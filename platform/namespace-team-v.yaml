@@ -1,0 +1,44 @@
+# Test namespace for the versioning branch: same labels as team-a, plus the
+# ServiceAccount + Role the Greeter release Job needs (Roles are platform-owned).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-v
+  labels:
+    istio-injection: enabled
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: greeter-release
+  namespace: team-v
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: greeter-release
+  namespace: team-v
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "delete"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: greeter-release
+  namespace: team-v
+subjects:
+  - kind: ServiceAccount
+    name: greeter-release
+    namespace: team-v
+roleRef:
+  kind: Role
+  name: greeter-release
+  apiGroup: rbac.authorization.k8s.io

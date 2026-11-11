@@ -1,0 +1,64 @@
+{{- if .Values.versioning.enabled }}
+{{- $name := include "greeter.name" . }}
+# Runs after every sync (Argo CD PostSync hook):
+#   1. release: register this version with Restate (new invocations go to it);
+#   2. reap: for every other version of this app registered in Restate that is
+#      no longer current for any service and has no unfinished invocations
+#      pinned to it, delete it from Restate and delete its Deployment + Service.
+# Versions still draining are kept; the next sync tries again.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-release
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ .Values.versioning.serviceAccountName }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: release
+          image: {{ .Values.versioning.image }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          env:
+            - {name: HOME, value: /tmp}
+            - {name: APP, value: {{ .Release.Name | quote }}}
+            - {name: NS, value: {{ .Release.Namespace | quote }}}
+            - {name: ADMIN, value: {{ .Values.registration.adminUrl | quote }}}
+            - {name: NEW_URI, value: "http://{{ $name }}.{{ .Release.Namespace }}.svc.cluster.local:9080/"}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              echo "Release: registering $NEW_URI"
+              code=$(curl -sS -o /tmp/out -w '%{http_code}' --retry 30 --retry-all-errors --retry-delay 5 \
+                -H 'content-type: application/json' -d "{\"uri\": \"$NEW_URI\"}" "$ADMIN/deployments")
+              cat /tmp/out; echo
+              case "$code" in 2*|409) echo "registered ($code)";; *) echo "registration failed ($code)"; exit 1;; esac
+
+              current=$(curl -sfS "$ADMIN/services" | jq -r '.services[].deployment_id' | sort -u)
+              curl -sfS "$ADMIN/deployments" | jq -r '.deployments[] | "\(.id) \(.uri)"' | while read -r id uri; do
+                case "$uri" in "http://$APP-"*".$NS.svc.cluster.local:9080/") ;; *) continue;; esac
+                [ "$uri" = "$NEW_URI" ] && continue
+                if echo "$current" | grep -qx "$id"; then echo "keep $uri: still current for a service"; continue; fi
+                n=$(curl -sfS "$ADMIN/query" -H 'accept: application/json' -H 'content-type: application/json' \
+                  -d "{\"query\": \"SELECT count(*) AS n FROM sys_invocation WHERE pinned_deployment_id = '$id' AND status != 'completed'\"}" \
+                  | jq -r '.rows[0].n')
+                if [ "$n" != "0" ]; then echo "keep $uri: $n unfinished invocation(s) pinned"; continue; fi
+                ver=${uri#"http://$APP-"}; ver=${ver%%.*}
+                echo "reap $uri ($id): drained"
+                curl -sfS -X DELETE "$ADMIN/deployments/$id?force=true"
+                kubectl -n "$NS" delete deployment,service -l "app=$APP,restate.dev/version=$ver" --ignore-not-found
+              done
+              echo "Release done."
+{{- end }}

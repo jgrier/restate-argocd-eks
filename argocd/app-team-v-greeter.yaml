@@ -1,0 +1,20 @@
+# The Greeter service as its own Argo CD Application, separate from the cluster.
+# Created by the platform team (Applications live in the argocd namespace). Manual sync.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: team-v-greeter
+  namespace: argocd
+spec:
+  project: team-v
+  source:
+    repoURL: git@github.com:jgrier/restate-argocd-eks.git
+    targetRevision: versioning
+    path: greeter/chart
+    helm:
+      releaseName: greeter
+      valueFiles:
+        - ../values-env-team-v.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: team-v

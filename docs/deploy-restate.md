@@ -37,9 +37,9 @@ Commit and push.
 
 ## 2. Sync
 
-In the Argo CD UI: open the **`restate`** Application, then **Refresh** (it picks up your commit), then **Sync**, then **Synchronize**.
+In the Argo CD UI: open the **`team-a-restate`** Application, then **Refresh** (it picks up your commit), then **Sync**, then **Synchronize**.
 
-From the CLI, `argocd app sync restate` does the same thing.
+From the CLI, `argocd app sync team-a-restate` does the same thing.
 
 ## 3. What happens (about 1–2 minutes)
 

@@ -23,7 +23,7 @@ Then set `image.repository` / `image.tag` in `greeter/values-team-a.yaml`, commi
 
 ## 2. Sync
 
-In the Argo CD UI: open the **`greeter`** Application, then **Refresh**, **Sync**, **Synchronize**.
+In the Argo CD UI: open the **`team-a-greeter`** Application, then **Refresh**, **Sync**, **Synchronize**.
 
 ## 3. What happens
 

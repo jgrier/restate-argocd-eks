@@ -88,12 +88,12 @@ aws s3api put-public-access-block --bucket "$BUCKET" --public-access-block-confi
   BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
 
 envsubst < platform/iam/snapshot-bucket-policy.json.tmpl > /tmp/snapshot-policy.json
-aws iam create-policy --policy-name "$CLUSTER-restate-snapshots" \
+aws iam create-policy --policy-name "$CLUSTER-$NAMESPACE-restate-snapshots" \
   --policy-document file:///tmp/snapshot-policy.json
 
 eksctl create iamserviceaccount --region "$REGION" --cluster "$CLUSTER" \
   --namespace "$NAMESPACE" --name "$WORKLOAD_SA" --role-name "$CLUSTER-$NAMESPACE-workload" \
-  --attach-policy-arn "arn:aws:iam::$ACCOUNT_ID:policy/$CLUSTER-restate-snapshots" --approve
+  --attach-policy-arn "arn:aws:iam::$ACCOUNT_ID:policy/$CLUSTER-$NAMESPACE-restate-snapshots" --approve
 kubectl -n "$NAMESPACE" get sa "$WORKLOAD_SA" -o yaml   # annotation eks.amazonaws.com/role-arn
 ```
 
@@ -138,15 +138,15 @@ kubectl apply -f argocd/app-restate.yaml -f argocd/app-greeter.yaml
   - Argo CD RBAC can let a team create Applications in its project from the UI or CLI;
   - an ApplicationSet can generate them from a config repo;
   - "apps in any namespace" (off by default) lets teams create them in their own namespace.
-- Both Applications use **manual sync**; the app team syncs them. See [deploy-restate.md](deploy-restate.md) and [deploy-app.md](deploy-app.md).
+- The Applications are `team-a-restate` and `team-a-greeter` (Helm releases `restate` and `greeter`). Both use **manual sync**; the app team syncs them. See [deploy-restate.md](deploy-restate.md) and [deploy-app.md](deploy-app.md).
 
 ## Teardown
 
 ```bash
-kubectl -n argocd delete application greeter restate
+kubectl -n argocd delete application team-a-greeter team-a-restate
 kubectl delete namespace team-a                  # deletes PVCs; PVs are Retained
 kubectl get pv                                   # delete Released PVs, then their EBS volumes
 eksctl delete iamserviceaccount --region "$REGION" --cluster "$CLUSTER" --namespace "$NAMESPACE" --name "$WORKLOAD_SA"
-aws iam delete-policy --policy-arn "arn:aws:iam::$ACCOUNT_ID:policy/$CLUSTER-restate-snapshots"
+aws iam delete-policy --policy-arn "arn:aws:iam::$ACCOUNT_ID:policy/$CLUSTER-$NAMESPACE-restate-snapshots"
 aws s3 rb "s3://$BUCKET" --force
 ```

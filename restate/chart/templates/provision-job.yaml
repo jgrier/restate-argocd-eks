@@ -1,0 +1,61 @@
+{{- if .Values.provisionJob.enabled }}
+{{- $fullname := include "restate.fullname" . }}
+# Provisions the Restate cluster exactly once. Runs on every Argo CD sync as a
+# Sync hook, alongside the StatefulSet (not PostSync: the pods only become
+# Ready after provisioning). Re-runs are no-ops ("provisioned by somebody else").
+# restatectl provision exits 0 even on errors, so success is judged from its
+# output and confirmed with `restatectl partitions list`.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $fullname }}-provision
+  labels:
+    app.kubernetes.io/name: {{ $fullname }}-provision
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $fullname }}-provision
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: provision
+          image: {{ include "restate.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              addr="http://{{ $fullname }}-0.{{ $fullname }}-cluster:5122"
+              for i in $(seq 1 60); do
+                out=$(restatectl provision --address "$addr" \
+                  --num-partitions {{ .Values.provisionJob.numPartitions }} \
+                  --replication {{ .Values.provisionJob.replication }} --yes 2>&1)
+                echo "$out"
+                if ! echo "$out" | grep -q '\[ERR\]' && echo "$out" | grep -qi 'provisioned'; then
+                  if restatectl partitions list --address "$addr" > /dev/null 2>&1; then
+                    echo "Cluster is provisioned."
+                    exit 0
+                  fi
+                fi
+                echo "Attempt $i: not provisioned yet; retrying in 5s"
+                sleep 5
+              done
+              echo "Gave up waiting for the cluster to be provisioned."
+              exit 1
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+{{- end }}

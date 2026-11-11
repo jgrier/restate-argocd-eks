@@ -1,0 +1,5 @@
+apiVersion: v2
+name: greeter
+description: Sample Restate service (Spring Boot Greeter), registered with Restate after each Argo CD sync
+type: application
+version: 0.1.0

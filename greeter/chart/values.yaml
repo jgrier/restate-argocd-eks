@@ -1,0 +1,18 @@
+# Image built from restatedev/examples java/templates/java-maven-spring-boot.
+image:
+  repository: ""   # set per environment
+  tag: v1
+  pullPolicy: IfNotPresent
+
+replicas: 2
+
+resources:
+  requests: {cpu: 250m, memory: 512Mi}
+  limits: {memory: 512Mi}
+
+# Register this service with Restate after every sync (Argo CD PostSync hook).
+registration:
+  enabled: true
+  # Restate admin API, reachable inside the namespace.
+  adminUrl: http://restate:9070
+  image: curlimages/curl:8.17.0

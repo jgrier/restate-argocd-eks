@@ -1,0 +1,36 @@
+{{- if .Values.registration.enabled }}
+# Registers the service with Restate after each sync. Retries until Restate's
+# admin API answers; an already-registered, unchanged deployment is a success.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-register
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: register
+          image: {{ .Values.registration.image }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              uri="http://{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:9080"
+              echo "Registering $uri with {{ .Values.registration.adminUrl }}"
+              code=$(curl -sS -o /tmp/out -w '%{http_code}' --retry 30 --retry-all-errors --retry-delay 5 \
+                -H 'content-type: application/json' \
+                -d "{\"uri\": \"$uri\"}" {{ .Values.registration.adminUrl }}/deployments)
+              cat /tmp/out; echo
+              case "$code" in 2*|409) echo "OK ($code)";; *) echo "Failed ($code)"; exit 1;; esac
+{{- end }}

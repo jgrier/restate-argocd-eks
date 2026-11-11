@@ -1,0 +1,12 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OnlyTheAdminRoleMayAssume",
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::${ACCOUNT_ID}:root" },
+      "Action": "sts:AssumeRole",
+      "Condition": { "ArnLike": { "aws:PrincipalArn": "${JOE_ASSUMER_ARN}" } }
+    }
+  ]
+}

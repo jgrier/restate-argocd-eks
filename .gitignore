@@ -1,0 +1,3 @@
+platform/env.sh
+platform/secrets/
+greeter/app/target/

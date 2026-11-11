@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.16</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.example</groupId>
+	<artifactId>restate-starter</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>restate-starter</name>
+	<description>Starter for Spring Boot + Restate</description>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+	<properties>
+		<java.version>25</java.version>
+        <restate.version>2.11.0</restate.version>
+	</properties>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>dev.restate</groupId>
+            <artifactId>sdk-spring-boot-starter</artifactId>
+            <version>${restate.version}</version>
+        </dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>dev.restate</groupId>
+			<artifactId>sdk-testing</artifactId>
+			<version>${restate.version}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- Provision a JDK 25 toolchain, auto-discovered from installed JDKs (no toolchains.xml needed) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-toolchains-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>select-jdk-toolchain</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<version>[25,)</version>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<!-- Java 25 warnings: enable-native-access is for the Restate SDK state machine, sun-misc-unsafe-memory-access is for netty. -->
+					<jvmArguments>--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow</jvmArguments>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Java 25 warnings: enable-native-access is for the Restate SDK state machine, sun-misc-unsafe-memory-access is for netty. -->
+					<argLine>--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow</argLine>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

@@ -1,0 +1,13 @@
+# Greeter: sample Restate service in namespace team-a, deployed by Argo CD.
+# Layered on chart/values.yaml.
+
+image:
+  repository: ghcr.io/jgrier/restate-greeter             # per environment: your registry
+  tag: v1
+
+replicas: 2
+
+# Register with the Restate cluster in the same namespace after each sync.
+registration:
+  enabled: true
+  adminUrl: http://restate:9070

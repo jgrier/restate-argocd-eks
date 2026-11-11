@@ -1,0 +1,9 @@
+apiVersion: v2
+description: Deploy a Restate cluster on Kubernetes
+home: https://restate.dev
+icon: https://restate.dev/restate.png
+name: restate-helm
+sources:
+- https://github.com/restatedev/restate
+type: application
+version: 1.8.1

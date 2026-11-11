@@ -1,0 +1,26 @@
+# Example EKS cluster: 3 nodes (8 vCPU / 16 GiB) across 3 AZs, IRSA, EBS CSI.
+#   eksctl create cluster -f platform/cluster.eksctl.yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: restate-argocd-eks
+  region: us-east-2
+availabilityZones: [us-east-2a, us-east-2b, us-east-2c]
+iam:
+  withOIDC: true
+addons:
+  - name: vpc-cni
+  - name: coredns
+  - name: kube-proxy
+  - name: aws-ebs-csi-driver
+    wellKnownPolicies:
+      ebsCSIController: true
+managedNodeGroups:
+  - name: ng-1
+    instanceType: c7i.2xlarge
+    desiredCapacity: 3
+    minSize: 3
+    maxSize: 6
+    amiFamily: AmazonLinux2023
+    volumeSize: 50
+    privateNetworking: true

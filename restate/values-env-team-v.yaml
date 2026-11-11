@@ -1,7 +1,7 @@
 # Test environment for the versioning branch (namespace team-v).
-# No snapshots, so no IAM: the chart creates its own ServiceAccount.
 serviceAccount:
-  create: true
+  create: false
+  name: restate-workload
 storage:
   storageClassName: gp3
   size: 10Gi
@@ -10,3 +10,5 @@ image:
 extraEnv:
   - name: AWS_REGION
     value: us-east-2
+  - name: RESTATE_WORKER__SNAPSHOTS__DESTINATION
+    value: s3://restate-argocd-eks-team-v-67f3c7/restate/snapshots

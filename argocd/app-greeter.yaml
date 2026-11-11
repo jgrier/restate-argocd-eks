@@ -3,12 +3,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: team-a-greeter
+  name: team-a-greeter   # per environment
   namespace: argocd
 spec:
-  project: team-a
+  project: team-a   # per environment
   source:
-    repoURL: git@github.com:jgrier/restate-argocd-eks.git
+    repoURL: git@github.com:jgrier/restate-argocd-eks.git   # per environment
     targetRevision: main
     path: greeter/chart
     helm:
@@ -17,4 +17,4 @@ spec:
         - ../values-team-a.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: team-a
+    namespace: team-a   # per environment

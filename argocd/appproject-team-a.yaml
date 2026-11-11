@@ -3,15 +3,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: team-a
+  name: team-a   # per environment
   namespace: argocd
 spec:
   description: App team project (example)
   sourceRepos:
-    - git@github.com:jgrier/restate-argocd-eks.git
+    - git@github.com:jgrier/restate-argocd-eks.git   # per environment
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: team-a
+      namespace: team-a   # per environment
   clusterResourceWhitelist: []
   namespaceResourceBlacklist:
     - {group: "", kind: ResourceQuota}

@@ -32,7 +32,8 @@ On EKS 1.34, with Istio 1.30.8 (CNI plugin, PERMISSIVE mTLS), restricted Pod Sec
 | Sync fails: resource kind not permitted | AppProject allow/deny list | Platform allows StatefulSet / PDB / Job / Deployment for the project |
 | Pods `Pending`: Insufficient cpu/memory | Nodes too small | Smaller `resources` (keep 1:2), or more/larger nodes; or `whenUnsatisfiable: ScheduleAnyway` |
 | Pods `Pending`: PVC not bound | Wrong StorageClass / no EBS CSI | Use the platform's class |
-| Pods `Pending` after nodes were replaced | EBS volumes are zonal; no node in that zone | Add a node in the missing zone |
+| Pods `Pending` after nodes were replaced | EBS volumes are zonal; no node in that zone | Add a node in the missing zone (a node group per zone avoids this) |
+| A Restate pod `Pending`: `didn't match pod topology spread constraints` | Fewer than 3 zones with free capacity | Add capacity in the missing zone; for single-zone test clusters use `topologyKey: kubernetes.io/hostname` |
 | Pods rejected: `violates PodSecurity` / UID not allowed | Policy on user IDs or seccomp | Set allowed UIDs; keep `seccompProfile: RuntimeDefault` |
 | `ImagePullBackOff` | Public registries blocked | Mirror the images (Restate, curl, your service) |
 | Provision Job logs `[ERR] … dns error` / `upstream connect error` | restate-0 not up yet | Normal for ~20 seconds; check pods if it persists |

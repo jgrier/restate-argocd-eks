@@ -49,10 +49,12 @@ resources:
     cpu: 4
     memory: 8Gi
 
-# One Restate pod per node.
+# One Restate pod per availability zone (and so one per node). With 3 pods in
+# 3 zones, replication 2 always puts a partition's two copies in different
+# zones, so the cluster survives losing a zone. Needs nodes in 3 zones.
 topologySpreadConstraints:
   maxSkew: 1
-  topologyKey: kubernetes.io/hostname
+  topologyKey: topology.kubernetes.io/zone
   whenUnsatisfiable: DoNotSchedule
 
 podDisruptionBudget:

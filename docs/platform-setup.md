@@ -27,13 +27,17 @@ source platform/env.sh
 
 ```bash
 eksctl create cluster -f platform/cluster.eksctl.yaml     # ~20 min
-kubectl get nodes
+kubectl get nodes -L topology.kubernetes.io/zone          # one node per zone
 ```
+
+The example uses **three availability zones with one node group per zone**:
+- Restate places one pod per zone, so the cluster survives losing a zone (see [deploy-restate.md](deploy-restate.md#availability-zones)).
+- Each pod's EBS volume lives in one zone, so that pod can only run in that zone. A per-zone node group guarantees each zone keeps capacity; a single group spread over zones can scale or rebalance a zone away and leave the pod `Pending`.
 
 Using an existing cluster instead, it needs:
 - the EBS CSI driver;
 - an IAM OIDC provider (for IRSA);
-- 3 nodes, each with **4 vCPU / 8 GiB free** for one Restate pod, plus ~0.1 CPU / 128 Mi for its Istio sidecar.
+- nodes in **3 availability zones**, each zone able to fit one Restate pod (**4 vCPU / 8 GiB free**, plus ~0.1 CPU / 128 Mi for its Istio sidecar), ideally from a node group per zone.
 
 Restate needs **block storage (EBS)**, not EFS/NFS.
 

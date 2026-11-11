@@ -89,6 +89,17 @@ kubectl -n team-a port-forward svc/restate 9070:9070 8080:8080
 
 The UI's playground sends requests to the pod IP it's told about, which your browser can't reach. Use `curl localhost:8080/...`, or set `RESTATE_INGRESS__ADVERTISED_ADDRESS`.
 
+## Availability zones
+
+`values-cluster.yaml` spreads the 3 Restate pods **one per availability zone** (`topologyKey: topology.kubernetes.io/zone`, `DoNotSchedule`). With one Restate node per zone, `replication 2` always places a partition's two copies, and each log record's two copies, in **different zones**. Losing a zone leaves 2 of 3 nodes: the metadata store keeps its majority, every partition keeps a copy, and the log can still write to 2 nodes.
+
+- **Fewer than 3 zones with capacity:** pods stay `Pending` rather than doubling up in a zone. That's deliberate. For a test cluster in one zone, use `topologyKey: kubernetes.io/hostname` instead.
+- **More than 3 Restate nodes** (e.g. 6, two per zone): node-level replication could then put both copies in one zone. Restate supports zone-aware placement:
+  - give each node its location with `RESTATE_LOCATION=<region>.<zone>` (e.g. `us-east-2.us-east-2a`);
+  - provision with zone-scoped replication, e.g. `--replication '{zone: 2}'`.
+
+  Set the location **before** the first provisioning; Restate warns that changing a node's location later can lose data. Pods don't see their zone by default, so this needs an init container that reads its node's `topology.kubernetes.io/zone` label (the platform grants read-only access to nodes). It isn't part of this repo.
+
 ## 5. Change or upgrade
 
 Edit values (for example `image.tag`), commit, then Refresh and Sync. Pods roll one at a time (PDB `maxUnavailable: 1`), and the provision Job is a no-op.

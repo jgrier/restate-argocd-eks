@@ -7,7 +7,8 @@ namespace-only rights**:
 - no operator, no CRDs, nothing cluster-scoped in the app team's deploys;
 - works under **Istio** (with the CNI plugin) and the **restricted** Pod Security Standard;
 - no `kubectl exec` or `port-forward` needed: a Sync-hook Job provisions the cluster, and a PostSync Job registers the service;
-- partition snapshots to **S3 via IRSA**, using a ServiceAccount the platform team set up.
+- partition snapshots to **S3 via IRSA**, using a ServiceAccount the platform team set up;
+- **one Restate node per availability zone**, so the cluster survives losing a zone.
 
 Tested on EKS 1.34, Istio 1.30.8, Argo CD v3.5.6, Restate 1.8.1.
 

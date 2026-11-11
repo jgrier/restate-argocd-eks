@@ -1,5 +1,11 @@
-# Example EKS cluster: 3 nodes (8 vCPU / 16 GiB) across 3 AZs, IRSA, EBS CSI.
+# Example EKS cluster: 3 availability zones, one managed node group per zone
+# (8 vCPU / 16 GiB nodes), IRSA, EBS CSI.
 #   eksctl create cluster -f platform/cluster.eksctl.yaml
+#
+# Why one node group per zone: each Restate pod's EBS volume lives in one zone,
+# so that pod can only ever run in that zone. A per-zone group guarantees every
+# zone keeps capacity (a single multi-zone group can scale or rebalance a zone
+# away, leaving that pod Pending).
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 metadata:
@@ -16,11 +22,30 @@ addons:
     wellKnownPolicies:
       ebsCSIController: true
 managedNodeGroups:
-  - name: ng-1
+  - name: ng-us-east-2a
+    availabilityZones: [us-east-2a]
     instanceType: c7i.2xlarge
-    desiredCapacity: 3
-    minSize: 3
-    maxSize: 6
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 2
+    amiFamily: AmazonLinux2023
+    volumeSize: 50
+    privateNetworking: true
+  - name: ng-us-east-2b
+    availabilityZones: [us-east-2b]
+    instanceType: c7i.2xlarge
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 2
+    amiFamily: AmazonLinux2023
+    volumeSize: 50
+    privateNetworking: true
+  - name: ng-us-east-2c
+    availabilityZones: [us-east-2c]
+    instanceType: c7i.2xlarge
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 2
     amiFamily: AmazonLinux2023
     volumeSize: 50
     privateNetworking: true

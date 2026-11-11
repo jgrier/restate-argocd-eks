@@ -82,6 +82,9 @@ provisionJob:
   numPartitions: 24
   replication: 2
 
+# -- Extra env vars appended after `env` (per-environment settings).
+extraEnv: []
+
 extraInitContainers: []
 
 extraVolumes: []

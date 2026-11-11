@@ -1,8 +1,8 @@
-# Greeter: sample Restate service in namespace team-a, deployed by Argo CD.
+# Greeter: everything environment-specific. Edit this file only.
 # Layered on chart/values.yaml.
 
 image:
-  repository: ghcr.io/jgrier/restate-greeter             # per environment: your registry
+  repository: ghcr.io/jgrier/restate-greeter   # or your registry
   tag: v1
 
 replicas: 2

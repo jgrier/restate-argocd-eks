@@ -1,0 +1,32 @@
+# Restate: everything environment-specific. Edit this file only;
+# leave values-cluster.yaml as is.
+
+# An existing ServiceAccount that your platform team linked to an IAM role
+# allowed to read/write the snapshot bucket (IRSA or EKS Pod Identity).
+serviceAccount:
+  create: false
+  name: restate-workload
+
+storage:
+  storageClassName: gp3          # your EBS-backed StorageClass
+  size: 20Gi                     # size for your workload (e.g. 100Gi+ for long load tests)
+
+image:
+  repository: docker.restate.dev/restatedev/restate   # or your registry mirror
+
+extraEnv:
+  - name: AWS_REGION
+    value: us-east-2
+  - name: RESTATE_WORKER__SNAPSHOTS__DESTINATION
+    value: s3://restate-argocd-eks-snapshots-171d0c/restate/snapshots   # a bucket/prefix only this cluster uses
+
+# If your pod policy requires specific user/group IDs, override the chart
+# defaults (UID 1000, GID 3000, fsGroup 2000) here:
+# securityContext:
+#   runAsUser: 1000
+#   runAsGroup: 3000
+# podSecurityContext:
+#   fsGroup: 2000
+#   fsGroupChangePolicy: "OnRootMismatch"
+#   seccompProfile:
+#     type: RuntimeDefault

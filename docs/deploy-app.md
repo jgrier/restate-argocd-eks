@@ -10,7 +10,7 @@ The example is `greeter/`: Restate's Spring Boot template (`Greeter.greet`, with
 |---|---|
 | `greeter/app/` | Java source and `Dockerfile` |
 | `greeter/chart/` | Deployment + Service on port **9080**, and a **PostSync** Job that registers the service |
-| `greeter/values-team-a.yaml` | Image and Restate admin URL |
+| `greeter/values-env.yaml` | Your environment: the image (and the Restate admin URL) |
 
 ## 1. Build and push the image
 
@@ -19,7 +19,7 @@ cd greeter/app
 docker buildx build --platform linux/amd64 -t <registry>/restate-greeter:v1 --push .
 ```
 
-Then set `image.repository` / `image.tag` in `greeter/values-team-a.yaml`, commit and push.
+Then set `image.repository` / `image.tag` in `greeter/values-env.yaml`, commit and push.
 
 ## 2. Sync
 

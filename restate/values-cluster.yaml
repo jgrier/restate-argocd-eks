@@ -1,17 +1,11 @@
-# Restate: 3-node replicated cluster in namespace team-a, deployed by Argo CD.
-# Layered on chart/values.yaml. Edit the "per environment" values for yours.
+# Restate: 3-node replicated cluster, deployed by Argo CD. The settings that
+# make it work: restricted Pod Security, Istio, one-time provisioning, sizing.
+# Layered on chart/values.yaml, then values-env.yaml. You shouldn't need to edit this.
 
 replicaCount: 3
 
 image:
-  repository: docker.restate.dev/restatedev/restate   # per environment: your mirror, if any
   tag: "1.8.1"
-
-# Run as an existing ServiceAccount that the platform team linked to an IAM
-# role allowed to read/write the snapshot bucket (IRSA or EKS Pod Identity).
-serviceAccount:
-  create: false
-  name: restate-workload                               # per environment
 
 # Passes the "restricted" Pod Security Standard.
 podSecurityContext:
@@ -38,13 +32,9 @@ env:
     value: "false"
   - name: DO_NOT_TRACK
     value: "true"
-  - name: AWS_REGION
-    value: us-east-2                                     # per environment
   # Keep under half of the memory limit below.
   - name: RESTATE_ROCKSDB_TOTAL_MEMORY_SIZE
     value: 3Gi
-  - name: RESTATE_WORKER__SNAPSHOTS__DESTINATION
-    value: s3://restate-argocd-eks-snapshots-171d0c/restate/snapshots   # per environment
   - name: RESTATE_WORKER__SNAPSHOTS__SNAPSHOT_INTERVAL_NUM_RECORDS
     value: "100000"
   - name: RESTATE_WORKER__SNAPSHOTS__NUM_RETAINED
@@ -58,10 +48,6 @@ resources:
   limits:
     cpu: 4
     memory: 8Gi
-
-storage:
-  size: 20Gi                                             # size for your workload
-  storageClassName: gp3                                  # per environment
 
 # One Restate pod per node.
 topologySpreadConstraints:

@@ -14,7 +14,7 @@ spec:
     helm:
       releaseName: greeter
       valueFiles:
-        - ../values-team-a.yaml
+        - ../values-env.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: team-a   # per environment

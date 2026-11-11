@@ -14,7 +14,8 @@ spec:
     helm:
       releaseName: restate
       valueFiles:
-        - ../values-team-a.yaml
+        - ../values-cluster.yaml   # how Restate runs (don't edit)
+        - ../values-env.yaml       # your environment (edit this)
   destination:
     server: https://kubernetes.default.svc
     namespace: team-a   # per environment

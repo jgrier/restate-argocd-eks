@@ -6,32 +6,37 @@ operator, no CRDs, and no `kubectl exec` or `port-forward`.
 
 ## What gets deployed
 
-`restate/chart` is Restate's `restate-helm` 1.8.1 chart with two small additions:
+`restate/chart` is Restate's `restate-helm` 1.8.1 chart with three small additions:
 
 | Addition | Why |
 |---|---|
 | `serviceAccount.name` | Run as an existing, IAM-linked ServiceAccount instead of creating one |
+| `extraEnv` | Per-environment env vars, appended after `env` |
 | `templates/provision-job.yaml` | Provisions the cluster exactly once, as an Argo CD **Sync hook** |
 
 The chart creates only namespaced objects: StatefulSet `restate` (3 pods), Service `restate` (8080 ingress, 9070 admin, 5122), headless Service `restate-cluster`, a PodDisruptionBudget, 3 PVCs (via the StatefulSet), and the provision Job.
 
 ## 1. Set your values
 
-Edit `restate/values-team-a.yaml` (or copy it to `values-<your-env>.yaml` and point the Application at it). The lines marked `# per environment`:
+The values come in two files, applied in this order:
+
+| File | Contains | Edit? |
+|---|---|---|
+| `restate/values-cluster.yaml` | How Restate runs: 3 replicas, Restate version, provision Job (36 partitions, replication 2), `RESTATE_AUTO_PROVISION=false`, metadata address, RocksDB and snapshot tuning, 4 vCPU / 8 GiB, one pod per node, PDB, seccomp `RuntimeDefault` | No |
+| `restate/values-env.yaml` | Your environment: ServiceAccount, StorageClass and size, image registry, `AWS_REGION` and the snapshot destination (via `extraEnv`), and commented-out user-ID overrides | **Yes** |
+
+In `values-env.yaml`:
 
 | Value | Example | Notes |
 |---|---|---|
-| `image.repository` | `docker.restate.dev/restatedev/restate` | Your mirror, if public registries are blocked |
 | `serviceAccount.name` | `restate-workload` | The ServiceAccount the platform linked to IAM |
+| `storage.storageClassName` / `storage.size` | `gp3` / `20Gi` | Ask the platform team for the class; size for your load (e.g. 100Gi+ for a 24h load test) |
+| `image.repository` | `docker.restate.dev/restatedev/restate` | Your mirror, if public registries are blocked |
 | `AWS_REGION` | `us-east-2` | Region of the bucket |
-| `RESTATE_WORKER__SNAPSHOTS__DESTINATION` | `s3://<bucket>/restate/snapshots` | Bucket only this Restate cluster uses |
-| `storage.storageClassName` / `storage.size` | `gp3` / `20Gi` | Ask the platform team for the class name; size for your load (e.g. 100Gi+ for a 24h load test) |
+| `RESTATE_WORKER__SNAPSHOTS__DESTINATION` | `s3://<bucket>/restate/snapshots` | A bucket/prefix only this Restate cluster uses |
+| `securityContext` / `podSecurityContext` (commented) | chart defaults UID 1000 / GID 3000 / fsGroup 2000 | Only if your policy requires other IDs; keep seccomp `RuntimeDefault` |
 
-Usually left alone:
-- **`resources`:** 4 vCPU / 8 GiB. Keep 1:2 CPU:RAM and keep `RESTATE_ROCKSDB_TOTAL_MEMORY_SIZE` under half of memory.
-- **`provisionJob`:** 36 partitions, replication 2.
-- **`RESTATE_AUTO_PROVISION=false`:** required; the Job provisions the cluster instead.
-- **`podSecurityContext` / chart `securityContext`:** non-root UID 1000 / GID 3000 / fsGroup 2000, seccomp `RuntimeDefault`. Override the IDs if your policy requires a range.
+`extraEnv` is appended after the `env` list in `values-cluster.yaml`. Helm replaces lists rather than merging them, so per-environment env vars go here.
 
 Commit and push.
 
@@ -91,7 +96,7 @@ Edit values (for example `image.tag`), commit, then Refresh and Sync. Pods roll 
 ## Without Argo CD (plain Helm)
 
 ```bash
-helm install restate ./restate/chart -n team-a -f restate/values-team-a.yaml
+helm install restate ./restate/chart -n team-a -f restate/values-cluster.yaml -f restate/values-env.yaml
 ```
 
 Helm ignores the Argo hook annotation, so the provision Job runs once at install as an ordinary resource.
